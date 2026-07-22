@@ -36,6 +36,10 @@ services:
 
     command: php artisan serve --host=0.0.0.0 --port=8000
 
+    networks:
+
+      - live-network
+
   simulator:
     build:
       context: .
@@ -56,6 +60,10 @@ services:
     expose:
       - "8001"
 
+    networks:
+
+      - live-network
+
   frontend:
     build:
       context: .
@@ -74,6 +82,10 @@ services:
 
     environment:
       CHOKIDAR_USEPOLLING: "true"
+
+    networks:
+
+      - live-network
       
   nginx:
 
@@ -99,7 +111,7 @@ services:
 
     networks:
 
-      - default
+      - live-network
 
 volumes:
   mysql_data:
