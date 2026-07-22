@@ -1,0 +1,108 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: live_mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: live_tracking
+      MYSQL_ROOT_PASSWORD: root
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    networks:
+      - live-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+
+    container_name: live_backend
+
+    working_dir: /var/www/html
+
+    volumes:
+      - ./backend:/var/www/html
+
+    depends_on:
+      - mysql
+
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  simulator:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+
+    container_name: live_simulator
+
+    working_dir: /var/www/html
+
+    volumes:
+      - ./tracking-simulator:/var/www/html
+
+    depends_on:
+      - mysql
+
+    command: php artisan serve --host=0.0.0.0 --port=8001
+
+    expose:
+      - "8001"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+
+    container_name: live_frontend
+
+    working_dir: /app
+
+    ports:
+      - "5173:5173"
+
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      
+  nginx:
+
+    image: nginx:1.27-alpine
+
+    container_name: live_nginx
+
+    restart: unless-stopped
+
+    ports:
+
+      - "80:80"
+
+    volumes:
+
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+
+    depends_on:
+
+      - backend
+
+      - frontend
+
+    networks:
+
+      - default
+
+volumes:
+  mysql_data:
+
+networks:
+  live-network:
