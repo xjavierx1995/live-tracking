@@ -6,8 +6,8 @@ context: |
   Arquitectura:
   - Monorepo con tres aplicaciones independientes.
   - Frontend: Vue 3 + Vite + TypeScript + Quasar.
-  - Backend: Laravel 12 (REST API, Sanctum, MySQL).
-  - Tracking Simulator: Laravel 12 implementando DDD para la simulación y tracking GPS.
+  - Backend: Laravel 13 (REST API, Sanctum, MySQL).
+  - Tracking Simulator: Laravel 13 implementando DDD para la simulación y tracking GPS.
   - Infraestructura local basada en Docker Compose (Nginx, PHP-FPM, Node, MySQL).
 
   Responsabilidades:
