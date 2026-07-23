@@ -1,151 +1,255 @@
-## Estructura del repositorio.
+# Live Tracking
 
-  El siguiente proyecto tiene una estructura monorepo la cual costa de tres servicios (Frontend, Backend y un microservicio)
+Sistema de monitoreo en tiempo real de una flota de autobuses. Arquitectura monorepo con tres servicios: Frontend (Vue 3), Backend (Laravel) y Tracking Simulator (microservicio Laravel).
 
-  El *frontend* esta estructurado de la siguiente manera (Vue 3, quasar, Vite, Pinia, Vue Router, Axios, leaflet):
+## Arquitectura
 
-    se utilizara la libreria `npm install @mapbox/polyline` para decodificar polylines.
+```
+Frontend (Vue 3 + Quasar)  →  Backend API (Laravel)  →  Tracking Simulator (Laravel)
+        :5173                      :8000                      :8001
+                                                              │
+                                                           MySQL
+                                                           :3307
+```
 
+- **Frontend** — Dashboard de monitoreo con mapa Leaflet, decodifica polylines para dibujar rutas.
+- **Backend** — API REST (Laravel + Sanctum). Expone servicios y simulation endpoints al frontend.
+- **Tracking Simulator** — Microservicio (Laravel, DDD). Genera servicios ficticios y posiciones GPS en tiempo real usando OpenRouteService.
 
-  ```
-  src/
+## Prerrequisitos
 
-    boot/ (configuracion para plugins. Ej. Axios.ts)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (con Docker Compose v2)
+- Git
 
-    components/ (componentes globales de la aplicacion) (ej. CustomModal.vue, CustomButton.vue)
+## Levantar el proyecto
 
-    pages/ (pantallas del sistema. Ej. DashboardPage.vue, TrackingPage.vue) 
+### 1. Clonar e instalar dependencias del frontend (una sola vez)
 
-    stores/ (Pinia para gestionar el estado de la aplicacion. Ej. auth-store.ts)
+```bash
+git clone <repo-url> live-tracking
+cd live-tracking
 
-    services/ (Aqui van todos los endpoints. Ej. tracking.service.ts)
+# Instalar dependencias del frontend
+cd frontend
+pnpm install
+cd ..
+```
 
-    router/ (rutas accesibles de la aplicacion)
+### 2. Copiar archivos de entorno
 
-    composables/ (funciones compartidas. Ej. useTracking.ts)
+```bash
+# Backend
+cp backend/.env.example backend/.env
 
-    types/ (archivos de interface, types y enum)
+# Tracking Simulator
+cp tracking-simulator/.env.example tracking-simulator/.env
+```
 
-    utils/ (metodos que realizan una funcion en especifico y pueden ser reutilizables en el proyecto)
-  ```
+### 3. Levantar todo con Docker
 
-  El *microservicio* esta estructurado de la siguiente manera (arquitectura DDD):
+```bash
+docker compose up -d --build
+```
 
-  ```
-  Application/
-    Commands/
+Esto levanta:
 
-    Handlers/
+| Servicio | Puerto | Descripción |
+|---|---|---|
+| nginx | `http://localhost:80` | Proxy inverso (frontend + backend API) |
+| frontend | `:5173` | Vue 3 + Quasar (dev server) |
+| backend | `:8000` | Laravel API |
+| simulator | `:8001` | Tracking Simulator API |
+| simulator-worker | — | Worker de colas (queue:work) |
+| mysql | `:3307` | MySQL 8.4 |
 
-    UseCases/
+### 4. Configurar base de datos
 
+```bash
+# Esperar a que MySQL esté listo (~10s después del boot)
+docker compose exec backend php artisan migrate --force
+docker compose exec simulator php artisan migrate --force
+```
 
-  Domain/
+### 5. Generar APP_KEY (una sola vez)
 
-    Entities/
+```bash
+docker compose exec backend php artisan key:generate
+docker compose exec simulator php artisan key:generate
+```
 
-    Repositories/
+### 6. Verificar que todo funciona
 
-    ValueObjects/
+```bash
+# Health check del simulator
+curl http://localhost:8001/api/simulator/health
 
-    Services/
+# Test del backend
+curl http://localhost/api/test
 
-  Infrastructure/
+# Frontend
+# Abrir http://localhost en el navegador
+```
 
-    Persistence/
+## Uso
 
-    Repositories/
+### Registrar usuario
 
-    PolylineDecoder/
+```bash
+curl -X POST http://localhost/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Admin","email":"admin@test.com","password":"password"}'
+```
 
-    GPSGenerator/
+### Login
 
-  Presentation/
+```bash
+curl -X POST http://localhost/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@test.com","password":"password"}'
+```
 
-    Console/
+El token devuelto se usa en los headers: `Authorization: Bearer <token>`
 
-    Commands/
+### Generar servicios
 
-    Controllers/
+```bash
+curl -X POST http://localhost/api/simulator/services/generate \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"count": 10}'
+```
 
-  ```
-  
-  El *backend* tendra la estrucutura base que brinda laravel (Laravel 13, Sanctum, MySQL) y se encargara de la comunicacion entre el microservicio y el frontend.:
+### Iniciar/detener simulación
 
-  se utilizara GoogleMapsRouteProvider para generar la polylines.
+```bash
+# Iniciar
+curl -X POST http://localhost/api/simulator/simulation/start \
+  -H "Authorization: Bearer <token>"
 
-  ```
-    app/
+# Detener
+curl -X POST http://localhost/api/simulator/simulation/stop \
+  -H "Authorization: Bearer <token>"
+```
 
-      Http/ 
+### Ver servicios y tracking
 
-      Controllers/
+```bash
+# Listar servicios
+curl http://localhost/api/services -H "Authorization: Bearer <token>"
 
-      Actions/
+# Tracking de un servicio
+curl http://localhost/api/services/1/tracking -H "Authorization: Bearer <token>"
+```
 
-      Services/
+## Variables de entorno importantes
 
-      Repositories/
+### Tracking Simulator (`tracking-simulator/.env`)
 
-      Models/
+| Variable | Descripción | Default |
+|---|---|---|
+| `ORS_API_KEY` | API key de OpenRouteService | (vacío → fallback sintético) |
+| `ORS_BASE_URL` | URL base de ORS | `https://api.openrouteservice.org` |
+| `SIMULATION_TICK_SECONDS` | Intervalo de generación GPS | `30` |
+| `SIMULATOR_ROUTE_CENTER_LAT` | Centro del área de simulación | `4.7110` |
+| `SIMULATOR_ROUTE_CENTER_LNG` | Centro del área de simulación | `-74.0721` |
+| `SIMULATOR_ROUTE_RADIUS_METERS` | Radio del área de simulación | `5000` |
 
-      DTO/
+### Backend (`backend/.env`)
 
-      Resources/
-  ```
+| Variable | Descripción | Default |
+|---|---|---|
+| `TRACKING_SIMULATOR_BASE_URL` | URL interna del simulator | `http://simulator:8001` |
 
-  Docker files para levantar los tres servicios (Frontend, Backend y Microservicio) y la base de datos MySQL.
+## Generación de rutas
 
-  ``` 
-    nginx
+El Tracking Simulator usa **OpenRouteService** (basado en OpenStreetMap) para generar rutas reales:
 
-    php-backend
+- Con `ORS_API_KEY` configurada: consulta la API de ORS y retorna polylines reales.
+- Sin `ORS_API_KEY`: usa un fallback sintético que genera una ruta interpolada con curvatura artificial.
 
-    php-simulator
+Para obtener rutas reales, obtener una API key gratuita en [openrouteservice.org](https://openrouteservice.org/dev/#/signup).
 
-    mysql
+## Desarrollo local (sin Docker)
 
-    frontend
+Si prefieres correr sin Docker:
 
-    phpmyadmin (opcional)
+```bash
+# Requiere MySQL local en puerto 3306
+# Ajustar DB_HOST, DB_PORT en ambos .env
 
-  ```
+# Backend
+cd backend
+composer install
+php artisan migrate
+php artisan serve --port=8000
 
-## Flujo de comunicacion entre los servicios.
+# Tracking Simulator
+cd tracking-simulator
+composer install
+php artisan migrate
+php artisan serve --port=8001
 
-  ```
+# Frontend
+cd frontend
+pnpm install
+pnpm dev
+```
 
-    Vue
-      |
-    Axios
-      |
-    Backend API
-      |
-    Tracking Simulator
-      |
-    MySQL
+## Estructura del monorepo
 
-  ```
+```
+live-tracking/
+├── docker/                    # Dockerfiles y configs
+│   ├── backend/Dockerfile
+│   ├── frontend/Dockerfile
+│   └── nginx/default.conf
+├── docker-compose.yml
+├── frontend/                  # Vue 3 + Quasar + Vite + Pinia
+│   └── src/
+│       ├── boot/              # Plugins (Axios)
+│       ├── components/        # Componentes globales
+│       ├── pages/             # Dashboard, Tracking
+│       ├── stores/            # Pinia stores
+│       ├── services/          # API endpoints
+│       ├── router/            # Rutas
+│       ├── composables/       # Compartido (useTracking)
+│       ├── types/             # Interfaces, types, enums
+│       └── utils/             # Utilidades reutilizables
+├── backend/                   # Laravel + Sanctum
+│   └── app/
+│       ├── Http/Controllers/  # API controllers
+│       ├── Services/          # TrackingSimulatorClient
+│       ├── Models/            # Eloquent models
+│       └── ...
+├── tracking-simulator/        # Microservicio (DDD)
+│   └── app/
+│       ├── Application/       # Use cases, contracts
+│       ├── Domain/            # Entities, value objects
+│       ├── Infrastructure/    # Route providers, polyline codec
+│       └── Presentation/      # HTTP controllers, API routes
+└── openspec/                  # Especificaciones de cambios
+```
 
-## Modulos de la aplicacion.
+## Modelo de datos
 
-  Módulo 1 – Simulador
-  ```text
+```
+services: id, name, start_time, end_time, polyline
+tracking: id, service_id, latitude, longitude, created_at
+```
 
-    Este módulo será el encargado de generar toda la información necesaria para alimentar el sistema de
-    monitorización en tiempo real. Su finalidad será simular el comportamiento de una flota de autobuses, creando
-    servicios ficticios y generando posiciones GPS que posteriormente serán consumidas por el módulo Live
-    Tracking.
-  ```
+## Comandos útiles
 
-  Módulo 2 – Live Tracking
-  ```text
-    Este módulo representa el dashboard principal de monitorización y permitirá visualizar el estado de todos los servicios en tiempo real.
-  ```
+```bash
+# Logs
+docker compose logs -f backend
+docker compose logs -f simulator
 
-## Modelo de Datos
+# Reiniciar un servicio
+docker compose restart backend
 
-  ```text
-  services: id, name, start_time, end_time, polyline.
-  tracking: id, service_id, latitude, longitude, created_at.
-  ```
+# Detener todo
+docker compose down
+
+# Limpiar datos (volumen MySQL)
+docker compose down -v
+```
