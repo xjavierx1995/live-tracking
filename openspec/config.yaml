@@ -17,6 +17,25 @@ context: |
   - No debe comunicarse directamente con el Tracking Simulator.
   - Utiliza Axios, Vue Router y Pinia.
   - Utiliza quasar para la UI.
+  - Organizado mediante arquitectura Feature Based.
+  - Los componentes deben ser reutilizables y desacoplados.
+  - Todas las respuestas del Backend deben mapearse mediante interfaces.
+  - No utilizar any.
+  - Las interfaces deben agruparse por módulo.
+  - Evitar duplicación de modelos.
+  Estructura:
+    - assets
+    - components
+    - composables
+    - interfaces
+    - layouts
+    - modules
+    - pages
+    - plugins
+    - router
+    - services
+    - stores
+    - utils
 
   Backend
   - Actúa como API Gateway.
@@ -142,6 +161,15 @@ rules:
       - Manejar rutas con Vue Router.
       - Gestionar peticiones HTTP con Axios.
       - Separar responsabilidades en servicios y composables.
+      - Composables
+        - Toda lógica reutilizable debe implementarse mediante Composables.
+        - Los Components no deben contener lógica de negocio.
+        - Los Composables pueden consumir Services y Stores.
+        - Los Composables no deben realizar renderizado.
+      - Router
+        - Organizar rutas por módulo.
+        - Lazy Loading obligatorio.
+        - Utilizar Navigation Guards para autenticación.
       
 principles:
 
