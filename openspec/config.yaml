@@ -101,6 +101,13 @@ rules:
       - Transformación mediante API Resources.
       - Integraciones externas encapsuladas.
       - API protegida con Sanctum.
+      - Todas las respuestas JSON del backend deben incluir data, message y status.
+      - Status debe ser booleano.
+      - Message debe indicar éxito o error.
+      - Data puede ser null en errores.
+      - Los mensajes de error deben ser claros y descriptivos.
+      - Los mensajes de éxito deben ser claros y descriptivos.
+      - Los mensajes deben estar en español técnico. 
     - Tracking Simulator:
       - Respetar DDD.
       - Separar Domain, Application, Infrastructure y Presentation.
@@ -139,3 +146,5 @@ constraints:
   - No duplicar lógica entre Backend y Tracking Simulator.
 
   - Mantener la independencia de cada servicio. 
+
+  - No aplicar unit test, ni pruebas de integración ni end-to-end.
