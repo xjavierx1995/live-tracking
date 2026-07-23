@@ -15,15 +15,15 @@
     <!-- Map -->
     <div class="col">
       <MapView
-        :service="selectedService"
-        :trackings="selectedService?.trackings || []"
+        :services="services"
+        :selected-service="selectedService"
       />
     </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import type { ServiceWithTrackings } from '@/types'
 import { serviceService } from '@/services/serviceService'
 import MapView from '@/components/map/MapView.vue'
@@ -33,6 +33,7 @@ import SimulatorControls from '@/components/simulator/SimulatorControls.vue'
 const services = ref<ServiceWithTrackings[]>([])
 const loading = ref(false)
 const selectedService = ref<ServiceWithTrackings | null>(null)
+let pollingInterval: ReturnType<typeof setInterval> | null = null
 
 async function fetchServices() {
   loading.value = true
@@ -63,5 +64,10 @@ function onSelectService(service: ServiceWithTrackings) {
 
 onMounted(() => {
   fetchServices()
+  pollingInterval = setInterval(fetchServices, 30000)
+})
+
+onUnmounted(() => {
+  if (pollingInterval) clearInterval(pollingInterval)
 })
 </script>
