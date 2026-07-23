@@ -1,5 +1,25 @@
 import { createApp } from 'vue'
-import './style.css'
+import { createPinia } from 'pinia'
+import { Quasar, Notify } from 'quasar'
+import router from './router'
+
+// Import icon libraries
+import '@quasar/extras/material-icons/material-icons.css'
+
+// Import Quasar css
+import 'quasar/src/css/index.sass'
+
+// Import Leaflet CSS
+import 'leaflet/dist/leaflet.css'
+
 import App from './App.vue'
 
-createApp(App).mount('#app')
+const app = createApp(App)
+
+app.use(createPinia())
+app.use(router)
+app.use(Quasar, {
+  plugins: { Notify },
+})
+
+app.mount('#app')

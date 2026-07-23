@@ -1,0 +1,67 @@
+<template>
+  <q-page class="row">
+    <!-- Sidebar: Services List -->
+    <div class="col-12 col-md-4 q-pa-md" style="max-width: 400px">
+      <ServiceList
+        :services="services"
+        :loading="loading"
+        :selected-id="selectedService?.id"
+        @select="onSelectService"
+        @refresh="fetchServices"
+      />
+      <SimulatorControls class="q-mt-md" />
+    </div>
+
+    <!-- Map -->
+    <div class="col">
+      <MapView
+        :service="selectedService"
+        :trackings="selectedService?.trackings || []"
+      />
+    </div>
+  </q-page>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import type { ServiceWithTrackings } from '@/types'
+import { serviceService } from '@/services/serviceService'
+import MapView from '@/components/map/MapView.vue'
+import ServiceList from '@/components/services/ServiceList.vue'
+import SimulatorControls from '@/components/simulator/SimulatorControls.vue'
+
+const services = ref<ServiceWithTrackings[]>([])
+const loading = ref(false)
+const selectedService = ref<ServiceWithTrackings | null>(null)
+
+async function fetchServices() {
+  loading.value = true
+  try {
+    const { data } = await serviceService.listWithTracking()
+    const serviceList = data.data || []
+    services.value = serviceList
+    if (serviceList.length > 0) {
+      if (!selectedService.value || !serviceList.some((s: ServiceWithTrackings) => s.id === selectedService.value?.id)) {
+        selectedService.value = serviceList[0]
+      } else {
+        const updated = serviceList.find((s: ServiceWithTrackings) => s.id === selectedService.value?.id)
+        if (updated) selectedService.value = updated
+      }
+    } else {
+      selectedService.value = null
+    }
+  } catch (error) {
+    console.error('Error loading services:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+function onSelectService(service: ServiceWithTrackings) {
+  selectedService.value = service
+}
+
+onMounted(() => {
+  fetchServices()
+})
+</script>
