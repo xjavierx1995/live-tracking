@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'tracking_simulator' => [
+        'base_url' => env('TRACKING_SIMULATOR_BASE_URL'),
+    ],
+
 ];

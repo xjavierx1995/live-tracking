@@ -33,6 +33,10 @@ services:
 
     depends_on:
       - mysql
+      - simulator
+
+    environment:
+      TRACKING_SIMULATOR_BASE_URL: http://simulator:8001
 
     command: php artisan serve --host=0.0.0.0 --port=8000
 
