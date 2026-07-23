@@ -41,6 +41,7 @@ export interface ApiResponse<T> {
 // Simulator types
 export interface SimulatorHealth {
   simulator: 'up' | 'down'
+  simulation_active: boolean
 }
 
 export interface GenerateServicesInput {

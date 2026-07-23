@@ -9,7 +9,16 @@
         @select="onSelectService"
         @refresh="fetchServices"
       />
-      <SimulatorControls class="q-mt-md" />
+      <SimulatorControls
+        class="q-mt-md"
+        :is-running="isRunning"
+        :loading="simLoading"
+        :error="simError"
+        @check-health="checkHealth"
+        @start-simulation="handleStart"
+        @stop-simulation="handleStop"
+        @generate-services="handleGenerate"
+      />
     </div>
 
     <!-- Map -->
@@ -24,12 +33,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import type { ServiceWithTrackings } from '@/types'
 import { serviceService } from '@/services/serviceService'
+import { useSimulator } from '@/composables/useSimulator'
 import MapView from '@/components/map/MapView.vue'
 import ServiceList from '@/components/services/ServiceList.vue'
 import SimulatorControls from '@/components/simulator/SimulatorControls.vue'
+
+const { isRunning, loading: simLoading, error: simError, checkHealth, startSimulation, stopSimulation, generateServices } = useSimulator()
 
 const services = ref<ServiceWithTrackings[]>([])
 const loading = ref(false)
@@ -72,12 +84,46 @@ function onMapSelectService(serviceId: number) {
   if (found) onSelectService(found)
 }
 
-onMounted(() => {
+function startPolling() {
+  if (pollingInterval) return
   fetchServices()
   pollingInterval = setInterval(fetchServices, 30000)
+}
+
+function stopPolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval)
+    pollingInterval = null
+  }
+}
+
+async function handleStart() {
+  await startSimulation()
+  checkHealth()
+}
+
+async function handleStop() {
+  await stopSimulation()
+  checkHealth()
+}
+
+async function handleGenerate(count: number) {
+  await generateServices(count)
+}
+
+watch(isRunning, (running) => {
+  if (running) {
+    startPolling()
+  } else {
+    stopPolling()
+  }
+})
+
+onMounted(() => {
+  checkHealth()
 })
 
 onUnmounted(() => {
-  if (pollingInterval) clearInterval(pollingInterval)
+  stopPolling()
 })
 </script>

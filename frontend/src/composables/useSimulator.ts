@@ -10,9 +10,10 @@ export function useSimulator() {
   async function checkHealth() {
     try {
       const { data } = await simulatorService.health()
-      const status = data.data?.simulator
-      health.value = status || 'down'
-      isRunning.value = status === 'up'
+      const simAlive = data.data?.simulator === 'up'
+      const simActive = data.data?.simulation_active === true
+      health.value = simAlive ? 'up' : 'down'
+      isRunning.value = simActive
     } catch {
       health.value = 'down'
       isRunning.value = false

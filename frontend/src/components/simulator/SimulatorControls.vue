@@ -9,12 +9,12 @@
 
       <div class="row items-center q-mb-md">
         <q-badge
-          :color="health === 'up' ? 'positive' : health === 'down' ? 'negative' : 'grey'"
+          :color="isRunning ? 'positive' : 'grey'"
           class="q-mr-sm"
         >
-          {{ health === 'up' ? 'Activo' : health === 'down' ? 'Inactivo' : 'Desconocido' }}
+          {{ isRunning ? 'Simulación activa' : 'Simulación inactiva' }}
         </q-badge>
-        <q-btn flat round dense icon="refresh" size="sm" @click="checkHealth">
+        <q-btn flat round dense icon="refresh" size="sm" @click="$emit('checkHealth')">
           <q-tooltip>Verificar estado</q-tooltip>
         </q-btn>
       </div>
@@ -38,7 +38,7 @@
           dense
           :loading="loading"
           :disable="serviceCount < 1 || isRunning"
-          @click="handleGenerate"
+          @click="$emit('generateServices', serviceCount)"
         />
       </div>
 
@@ -51,7 +51,7 @@
           dense
           :loading="loading"
           :disable="isRunning"
-          @click="startSimulation"
+          @click="$emit('startSimulation')"
         />
         <q-btn
           label="Detener simulación"
@@ -60,7 +60,7 @@
           dense
           :loading="loading"
           :disable="!isRunning"
-          @click="stopSimulation"
+          @click="$emit('stopSimulation')"
         />
       </div>
     </q-card-section>
@@ -68,20 +68,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useSimulator } from '@/composables/useSimulator'
+import { ref } from 'vue'
 
-const { isRunning, health, loading, error, checkHealth, startSimulation, stopSimulation, generateServices } = useSimulator()
+defineProps<{
+  isRunning: boolean
+  loading: boolean
+  error: string | null
+}>()
+
+defineEmits<{
+  checkHealth: []
+  startSimulation: []
+  stopSimulation: []
+  generateServices: [count: number]
+}>()
 
 const serviceCount = ref(5)
-
-async function handleGenerate() {
-  if (serviceCount.value > 0) {
-    await generateServices(serviceCount.value)
-  }
-}
-
-onMounted(() => {
-  checkHealth()
-})
 </script>

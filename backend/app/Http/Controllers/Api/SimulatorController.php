@@ -59,14 +59,14 @@ class SimulatorController extends Controller
     {
         $status = $action->execute();
 
-        if ($status === 'up') {
-            return $this->successResponse(['simulator' => 'up'], 'Tracking simulator disponible.');
+        if ($status['simulator'] === 'down') {
+            return response()->json([
+                'data' => ['simulator' => 'down', 'simulation_active' => false],
+                'message' => 'Tracking simulator no disponible.',
+                'status' => false,
+            ], 503);
         }
 
-        return response()->json([
-            'data' => ['simulator' => 'down'],
-            'message' => 'Tracking simulator no disponible.',
-            'status' => false,
-        ], 503);
+        return $this->successResponse($status, 'Tracking simulator disponible.');
     }
 }

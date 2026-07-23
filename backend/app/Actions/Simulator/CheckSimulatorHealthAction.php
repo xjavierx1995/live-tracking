@@ -11,22 +11,25 @@ class CheckSimulatorHealthAction
     {
     }
 
-    public function execute(): string
+    /**
+     * @return array{simulator: string, simulation_active: bool}
+     */
+    public function execute(): array
     {
         try {
             $payload = $this->client->health();
         } catch (TrackingSimulatorException) {
-            return 'down';
+            return ['simulator' => 'down', 'simulation_active' => false];
         }
 
-        if (isset($payload['data']) && is_array($payload['data'])) {
-            $status = $payload['data']['simulator'] ?? null;
+        $data = $payload['data'] ?? $payload;
 
-            return $status === 'down' ? 'down' : 'up';
-        }
+        $simulator = $data['simulator'] ?? 'down';
+        $simulationActive = $data['simulation_active'] ?? false;
 
-        $status = $payload['simulator'] ?? null;
-
-        return $status === 'down' ? 'down' : 'up';
+        return [
+            'simulator' => $simulator === 'up' ? 'up' : 'down',
+            'simulation_active' => (bool) $simulationActive,
+        ];
     }
 }
