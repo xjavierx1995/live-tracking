@@ -31,6 +31,16 @@ context: |
   - Administra el tracking.
   - Expone una API REST únicamente para el Backend.
   - Implementa arquitectura DDD.
+  - Organizado en:
+    - Presentation
+    - Application
+    - Domain
+    - Infrastructure
+    - Shared
+  - Toda la lógica de negocio reside en Domain y Application.
+  - Infrastructure contiene implementaciones técnicas (HTTP, Google Maps, Eloquent, Redis).
+  - Presentation únicamente expone la API REST.
+  - El dominio no debe depender de Laravel.
 
   Convenciones generales
 
@@ -111,6 +121,20 @@ rules:
     - Tracking Simulator:
       - Respetar DDD.
       - Separar Domain, Application, Infrastructure y Presentation.
+      - Mantener separación entre:
+        - Presentation
+        - Application
+        - Domain
+        - Infrastructure
+        - No utilizar Eloquent dentro de Domain.
+        - Toda dependencia externa debe abstraerse mediante Contracts.
+        - Las implementaciones deben ubicarse en Infrastructure.
+        - Los casos de uso pertenecen a Application.
+        - Los Controllers únicamente coordinan la petición y respuesta.
+        - Los Value Objects deben ser inmutables.
+        - Los Entities no deben depender del framework.
+        - Los Repositories se definen como interfaces en Domain e implementaciones en Infrastructure.
+        
     - Frontend:
       - Mantener componentes desacoplados.
       - Evitar lógica de negocio en componentes.
