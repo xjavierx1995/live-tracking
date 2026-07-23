@@ -40,6 +40,11 @@ return [
         'directions_url' => env('GOOGLE_MAPS_DIRECTIONS_URL', 'https://maps.googleapis.com/maps/api/directions/json'),
     ],
 
+    'openrouteservice' => [
+        'api_key' => env('ORS_API_KEY', ''),
+        'base_url' => env('ORS_BASE_URL', 'https://api.openrouteservice.org'),
+    ],
+
     'simulator' => [
         'tick_seconds' => (int) env('SIMULATION_TICK_SECONDS', 30),
         'route_center_lat' => (float) env('SIMULATOR_ROUTE_CENTER_LAT', 4.7110),
