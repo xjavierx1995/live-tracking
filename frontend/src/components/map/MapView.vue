@@ -18,6 +18,7 @@
         v-for="svc in servicesWithLocation"
         :key="svc.id"
         :lat-lng="svc.lastLocation"
+        @click="emit('selectService', svc.id)"
       >
         <l-popup>
           <div>
@@ -64,6 +65,10 @@ import type { ServiceWithTrackings, TrackingPoint } from '@/types'
 const props = defineProps<{
   services: ServiceWithTrackings[]
   selectedService: ServiceWithTrackings | null
+}>()
+
+const emit = defineEmits<{
+  selectService: [serviceId: number]
 }>()
 
 const zoom = ref(13)

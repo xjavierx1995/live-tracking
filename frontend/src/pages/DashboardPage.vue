@@ -17,6 +17,7 @@
       <MapView
         :services="services"
         :selected-service="selectedService"
+        @select-service="onMapSelectService"
       />
     </div>
   </q-page>
@@ -59,7 +60,16 @@ async function fetchServices() {
 }
 
 function onSelectService(service: ServiceWithTrackings) {
-  selectedService.value = service
+  if (selectedService.value?.id === service.id) {
+    selectedService.value = null
+  } else {
+    selectedService.value = service
+  }
+}
+
+function onMapSelectService(serviceId: number) {
+  const found = services.value.find((s) => s.id === serviceId)
+  if (found) onSelectService(found)
 }
 
 onMounted(() => {
