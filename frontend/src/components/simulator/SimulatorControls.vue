@@ -1,70 +1,79 @@
 <template>
-  <q-card>
-    <q-card-section>
-      <div class="text-h6 q-mb-md">Simulador</div>
-
-      <q-banner v-if="error" class="bg-negative text-white q-mb-md">
-        {{ error }}
-      </q-banner>
-
-      <div class="row items-center q-mb-md">
-        <q-badge
-          :color="isRunning ? 'positive' : 'grey'"
-          class="q-mr-sm"
-        >
-          {{ isRunning ? 'Simulación activa' : 'Simulación inactiva' }}
-        </q-badge>
-        <q-btn flat round dense icon="refresh" size="sm" @click="$emit('checkHealth')">
-          <q-tooltip>Verificar estado</q-tooltip>
-        </q-btn>
+  <div class="sim-controls">
+    <div class="controls-header">
+      <q-icon name="settings_input_antenna" size="18px" class="q-mr-xs" />
+      <span class="controls-title">Simulador</span>
+      <div class="sim-status" :class="isRunning ? 'sim-status--active' : 'sim-status--inactive'">
+        <span class="sim-status-dot" />
+        {{ isRunning ? 'Activo' : 'Inactivo' }}
       </div>
+    </div>
 
-      <q-separator class="q-mb-md" />
+    <div v-if="error" class="controls-error">
+      <q-icon name="warning" size="14px" />
+      {{ error }}
+    </div>
 
-      <!-- Generate Services -->
-      <div class="row q-gutter-sm items-center q-mb-md">
+    <div class="controls-body">
+      <div class="controls-row">
         <q-input
           v-model.number="serviceCount"
           type="number"
-          label="Cantidad"
           dense
           outlined
-          style="max-width: 100px"
-          :rules="[(val) => val > 0 || 'Mayor a 0']"
+          hide-bottom-space
+          class="count-input"
+          :rules="[(val) => val > 0 || '']"
         />
         <q-btn
-          label="Generar servicios"
-          color="secondary"
+          no-caps
           dense
+          unelevated
+          class="generate-btn"
           :loading="loading"
           :disable="serviceCount < 1 || isRunning"
           @click="$emit('generateServices', serviceCount)"
-        />
+        >
+          <q-icon name="add" size="16px" class="q-mr-xs" />
+          Generar
+        </q-btn>
       </div>
 
-      <!-- Start/Stop Simulation -->
-      <div class="row q-gutter-sm">
+      <div class="controls-row">
         <q-btn
-          label="Iniciar simulación"
-          color="positive"
-          icon="play_arrow"
+          no-caps
           dense
+          unelevated
+          class="start-btn"
           :loading="loading"
           :disable="isRunning"
           @click="$emit('startSimulation')"
-        />
+        >
+          <q-icon name="play_arrow" size="16px" class="q-mr-xs" />
+          Iniciar
+        </q-btn>
         <q-btn
-          label="Detener simulación"
-          color="negative"
-          icon="stop"
+          no-caps
           dense
+          unelevated
+          class="stop-btn"
           :loading="loading"
           :disable="!isRunning"
           @click="$emit('stopSimulation')"
-        />
+        >
+          <q-icon name="stop" size="16px" class="q-mr-xs" />
+          Detener
+        </q-btn>
       </div>
-    </q-card-section>
-  </q-card>
+    </div>
+
+    <div class="controls-footer">
+      <q-btn flat dense no-caps size="sm" class="refresh-health" @click="$emit('checkHealth')">
+        <q-icon name="refresh" size="14px" class="q-mr-xs" />
+        Verificar estado
+      </q-btn>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -85,3 +94,149 @@ defineEmits<{
 
 const serviceCount = ref(5)
 </script>
+
+<style scoped>
+.sim-controls {
+  padding: 14px 16px;
+}
+
+.controls-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.controls-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-heading);
+}
+
+.sim-status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+.sim-status--active {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.sim-status--inactive {
+  background: #F3F4F6;
+  color: #9CA3AF;
+}
+
+.sim-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.controls-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.controls-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controls-row {
+  display: flex;
+  gap: 8px;
+}
+
+.count-input {
+  width: 72px;
+}
+
+.count-input :deep(.q-field__control) {
+  height: 36px !important;
+  min-height: 36px;
+  border-radius: 8px !important;
+  border-color: #D1D5DB !important;
+  background: white !important;
+}
+
+.count-input :deep(.q-field__native) {
+  font-size: 13px;
+  color: var(--color-text-heading);
+}
+
+.generate-btn {
+  flex: 1;
+  height: 36px !important;
+  min-height: 36px;
+  background: #4A6CF7 !important;
+  color: white !important;
+  border-radius: 8px !important;
+  font-size: 12px;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px;
+}
+.generate-btn:hover {
+  background: #3B5DE7 !important;
+}
+
+.start-btn {
+  flex: 1;
+  height: 36px !important;
+  min-height: 36px;
+  background: #22C55E !important;
+  color: white !important;
+  border-radius: 8px !important;
+  font-size: 12px;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px;
+}
+.start-btn:hover {
+  background: #16A34A !important;
+}
+
+.stop-btn {
+  flex: 1;
+  height: 36px !important;
+  min-height: 36px;
+  background: #EF4444 !important;
+  color: white !important;
+  border-radius: 8px !important;
+  font-size: 12px;
+  font-weight: 600 !important;
+  letter-spacing: 0.2px;
+}
+.stop-btn:hover {
+  background: #DC2626 !important;
+}
+
+.controls-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.refresh-health {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+.refresh-health:hover {
+  color: var(--color-primary);
+}
+</style>

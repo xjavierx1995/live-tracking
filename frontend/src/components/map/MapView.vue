@@ -21,12 +21,11 @@
         @click="emit('selectService', svc.id)"
       >
         <l-popup>
-          <div>
-            <strong>{{ svc.name }}</strong><br />
-            <span v-if="svc.lastTracking">
-              Última posición: {{ formatTime(svc.lastTracking.created_at) }}
-            </span>
-            <span v-else class="text-grey">Sin posiciones</span>
+          <div class="popup-service">
+            <div class="popup-name">{{ svc.name }}</div>
+            <div v-if="svc.lastTracking" class="popup-time">
+              {{ formatTime(svc.lastTracking.created_at) }}
+            </div>
           </div>
         </l-popup>
       </l-marker>
@@ -35,8 +34,9 @@
       <l-polyline
         v-if="selectedService?.polyline && polylinePoints.length > 0"
         :lat-lngs="polylinePoints"
-        color="blue"
+        color="#4A6CF7"
         :weight="4"
+        :opacity="0.85"
       />
 
       <!-- Selected service: all tracking points -->
@@ -46,9 +46,9 @@
         :lat-lng="[point.latitude, point.longitude]"
       >
         <l-popup>
-          <div>
-            <strong>Punto {{ index + 1 }}</strong><br />
-            {{ formatTime(point.created_at) }}
+          <div class="popup-tracking">
+            <div class="popup-tracking-label">Punto {{ index + 1 }}</div>
+            <div class="popup-tracking-time">{{ formatTime(point.created_at) }}</div>
           </div>
         </l-popup>
       </l-marker>
@@ -164,7 +164,40 @@ function formatTime(dateString: string): string {
 
 <style scoped>
 .map-container {
-  height: calc(100vh - 50px);
+  height: 100%;
   width: 100%;
+  border-radius: 0;
+}
+
+.popup-service {
+  padding: 2px 0;
+}
+
+.popup-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #1F2937;
+  margin-bottom: 2px;
+}
+
+.popup-time {
+  font-size: 11px;
+  color: #6B7280;
+}
+
+.popup-tracking {
+  padding: 2px 0;
+}
+
+.popup-tracking-label {
+  font-weight: 600;
+  font-size: 12px;
+  color: #4A6CF7;
+  margin-bottom: 2px;
+}
+
+.popup-tracking-time {
+  font-size: 11px;
+  color: #6B7280;
 }
 </style>
