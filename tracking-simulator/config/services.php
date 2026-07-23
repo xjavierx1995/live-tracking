@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'google_maps' => [
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
+        'directions_url' => env('GOOGLE_MAPS_DIRECTIONS_URL', 'https://maps.googleapis.com/maps/api/directions/json'),
+    ],
+
+    'simulator' => [
+        'tick_seconds' => (int) env('SIMULATION_TICK_SECONDS', 30),
+        'route_center_lat' => (float) env('SIMULATOR_ROUTE_CENTER_LAT', 4.7110),
+        'route_center_lng' => (float) env('SIMULATOR_ROUTE_CENTER_LNG', -74.0721),
+        'route_radius_meters' => (int) env('SIMULATOR_ROUTE_RADIUS_METERS', 5000),
+    ],
+
 ];

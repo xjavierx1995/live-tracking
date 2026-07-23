@@ -1,58 +1,83 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Tracking Simulator
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Microservicio Laravel responsable de generar servicios ficticios, construir la ruta base, producir tracking GPS continuo y exponer un contrato interno consumido por `backend`.
 
-## About Laravel
+## Responsabilidades
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Generar servicios con `id`, `name`, `start_time`, `end_time` y `polyline`.
+- Persistir historico de tracking en la tabla `tracking`.
+- Encapsular la integracion con Google Maps dentro de `GoogleMapsRouteProvider`.
+- Reprogramar ticks de simulacion cada 30 segundos mientras el estado global siga activo.
+- Mantener respuestas compatibles con el read model que backend ya expone.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Estructura
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- `app/Presentation`: controllers y requests HTTP del simulador.
+- `app/Application`: casos de uso, contratos y jobs.
+- `app/Domain`: value objects del dominio de simulacion.
+- `app/Infrastructure`: implementaciones tecnicas para polyline, estado y proveedor externo.
 
-## Learning Laravel
+## Variables de entorno
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Variables principales para Docker Compose:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```env
+APP_URL=http://localhost:8001
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=live_tracking
+DB_USERNAME=root
+DB_PASSWORD=root
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+SIMULATION_TICK_SECONDS=30
+GOOGLE_MAPS_API_KEY=
+GOOGLE_MAPS_DIRECTIONS_URL=https://maps.googleapis.com/maps/api/directions/json
+SIMULATOR_ROUTE_CENTER_LAT=4.7110
+SIMULATOR_ROUTE_CENTER_LNG=-74.0721
+SIMULATOR_ROUTE_RADIUS_METERS=5000
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Notas:
 
-## Contributing
+- Si `GOOGLE_MAPS_API_KEY` no esta configurada, el provider genera una ruta sintetica pero mantiene la integracion encapsulada en la misma abstraccion.
+- `QUEUE_CONNECTION=database` es requerido para la reprogramacion recursiva del tracking.
+- `CACHE_STORE=database` conserva el estado central de simulacion entre requests y workers.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Arranque local
 
-## Code of Conduct
+Con Docker Compose:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+docker compose up -d mysql simulator simulator-worker
+```
 
-## Security Vulnerabilities
+Dentro del contenedor o localmente:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan serve --host=0.0.0.0 --port=8001
+php artisan queue:work --tries=1 --sleep=1
+```
 
-## License
+## Flujo de simulacion
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. `POST /api/simulator/services/generate` crea servicios y persiste la polyline.
+2. `POST /api/simulator/simulation/start` activa el estado global y encola el primer tick.
+3. `AdvanceSimulationJob` ejecuta `AdvanceTrackingTickAction`, persiste un nuevo punto por servicio y se vuelve a programar a 30 segundos.
+4. `POST /api/simulator/simulation/stop` desactiva el estado global y corta la reprogramacion.
+5. `GET /api/services`, `GET /api/services/{id}/tracking` y `GET /api/services/tracking` exponen el read model consumido por backend.
+
+## Endpoints internos
+
+- `POST /api/simulator/services/generate`
+- `POST /api/simulator/simulation/start`
+- `POST /api/simulator/simulation/stop`
+- `GET /api/simulator/health`
+- `GET /api/services`
+- `GET /api/services/{id}`
+- `GET /api/services/{id}/tracking`
+- `GET /api/services/tracking`
