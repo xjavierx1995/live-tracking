@@ -21,7 +21,6 @@ context: |
   Backend
   - Actúa como API Gateway.
   - Gestiona autenticación, usuarios, servicios y reglas de negocio.
-  - Se comunica con Google Maps mediante un RouteProvider.
   - Se comunica con el Tracking Simulator mediante HTTP REST.
   - Expone la única API consumida por el Frontend.
 
@@ -38,9 +37,10 @@ context: |
     - Infrastructure
     - Shared
   - Toda la lógica de negocio reside en Domain y Application.
-  - Infrastructure contiene implementaciones técnicas (HTTP, Google Maps, Eloquent, Redis).
+  - Infrastructure contiene implementaciones técnicas (HTTP, GoogleMapsRouteProvider, Eloquent, Redis).
   - Presentation únicamente expone la API REST.
   - El dominio no debe depender de Laravel.
+  - Utiliza GoogleMapsRouteProvider para obtener o construir la ruta base de los servicios.
 
   Convenciones generales
 
