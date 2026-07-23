@@ -91,7 +91,7 @@ Servicios afectados:
     - response: `{ "data": [ServiceResource], "message": string, "status": boolean }`
   - `GET /api/services/tracking`
     - request: sin parámetros de entrada
-    - response: `{ "data": [ServiceTrackingResource], "message": string, "status": boolean }`
+    - response: `{ "data": [{ "id": number, "name": string, "start_time": string|null, "end_time": string|null, "polyline": string|null, "trackings": [{ "latitude": number, "longitude": number, "created_at": string }] }], "message": string, "status": boolean }`
   - `GET /api/services/{id}`
     - response: `{ "data": ServiceResource, "message": string, "status": boolean }`
   - `GET /api/services/{id}/tracking`
@@ -103,9 +103,9 @@ Servicios afectados:
 - `GenerateServicesInputDto`: `count`.
 - `StartSimulationInputDto`: sin atributos de entrada (disparo global para todos los servicios registrados).
 - `StopSimulationInputDto`: sin atributos de entrada (detención global de simulación activa).
-- `ServicesTrackingRowDto`: `service_id`, `tracking_id`, `name`, `start_time`, `end_time`, `polyline`, `latitude`, `longitude`.
+- `ServiceWithTrackingsDto`: `id`, `name`, `start_time`, `end_time`, `polyline`, `trackings`.
 - `ServiceDto`: `id`, `name`, `start_time`, `end_time`, `polyline`.
-- `TrackingPointDto`: `service_id`, `latitude`, `longitude`, `created_at`.
+- `TrackingPointDto`: `latitude`, `longitude`, `created_at`.
 
 1. Estrategia de actualización para live tracking
 - Decisión: el frontend consumirá `GET /api/services/tracking` como endpoint agregado de monitoreo global.
