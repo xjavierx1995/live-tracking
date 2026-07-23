@@ -1,0 +1,141 @@
+schema: spec-driven
+
+context: |
+  Proyecto: live-tracking
+
+  Arquitectura:
+  - Monorepo con tres aplicaciones independientes.
+  - Frontend: Vue 3 + Vite + TypeScript + Quasar.
+  - Backend: Laravel 12 (REST API, Sanctum, MySQL).
+  - Tracking Simulator: Laravel 12 implementando DDD para la simulación y tracking GPS.
+  - Infraestructura local basada en Docker Compose (Nginx, PHP-FPM, Node, MySQL).
+
+  Responsabilidades:
+
+  Frontend
+  - Consume únicamente la API del Backend.
+  - No debe comunicarse directamente con el Tracking Simulator.
+  - Utiliza Axios, Vue Router y Pinia.
+  - Utiliza quasar para la UI.
+
+  Backend
+  - Actúa como API Gateway.
+  - Gestiona autenticación, usuarios, servicios y reglas de negocio.
+  - Se comunica con Google Maps mediante un RouteProvider.
+  - Se comunica con el Tracking Simulator mediante HTTP REST.
+  - Expone la única API consumida por el Frontend.
+
+  Tracking Simulator
+  - Responsable exclusivo de la simulación de recorridos.
+  - Genera posiciones GPS.
+  - Administra el tracking.
+  - Expone una API REST únicamente para el Backend.
+  - Implementa arquitectura DDD.
+
+  Convenciones generales
+
+  - Cada cambio debe indicar explícitamente qué servicio(s) afecta.
+  - Mantener bajo acoplamiento entre servicios.
+  - Evitar dependencias directas entre Frontend y Simulator.
+  - Preferir interfaces y contratos antes que implementaciones.
+  - Los cambios deben ser incrementales y reversibles.
+  - Mantener compatibilidad hacia atrás cuando se modifiquen contratos REST.
+  - La documentación debe escribirse en español técnico.
+
+rules:
+
+  proposal:
+
+    - Incluir:
+      - Objetivo
+      - Alcance
+      - No objetivos
+      - Riesgos
+      - Impacto por servicio
+      - Dependencias
+      - Criterios de aceptación
+
+    - Especificar el impacto separado para:
+      - frontend
+      - backend
+      - tracking-simulator
+      - infraestructura (si aplica)
+
+    - Si existe un cambio de API:
+      - describir compatibilidad
+      - estrategia de migración
+      - versionado si corresponde
+
+  design:
+
+    - Describir la arquitectura por servicio.
+    - Explicar el flujo de datos entre servicios.
+    - Definir contratos REST (request y response).
+    - Especificar DTO cuando corresponda.
+    - Explicar decisiones de diseño relevantes.
+    - Documentar dependencias externas (Google Maps, etc.).
+    - Documentar cambios de base de datos y estrategia de rollback.
+
+  tasks:
+
+    - Agrupar tareas por:
+      - frontend
+      - backend
+      - tracking-simulator
+      - infraestructura
+
+    - Cada tarea debe contener:
+      - descripción
+      - criterio de aceptación
+      - dependencias
+      - prioridad
+
+  implementation:
+
+    - Respetar SOLID.
+    - Favorecer Clean Architecture.
+    - Backend:
+      - Controllers delgados.
+      - Lógica en Actions.
+      - Validación mediante FormRequest.
+      - Transformación mediante API Resources.
+      - Integraciones externas encapsuladas.
+      - API protegida con Sanctum.
+    - Tracking Simulator:
+      - Respetar DDD.
+      - Separar Domain, Application, Infrastructure y Presentation.
+    - Frontend:
+      - Mantener componentes desacoplados.
+      - Evitar lógica de negocio en componentes.
+      - Gestionar estado con Pinia.
+      - Manejar rutas con Vue Router.
+      - Gestionar peticiones HTTP con Axios.
+      - Separar responsabilidades en servicios y composables.
+      
+principles:
+
+  - El Frontend nunca consume directamente el Tracking Simulator.
+
+  - El Backend es el único punto de entrada para el Frontend.
+
+  - El Tracking Simulator es dueño exclusivo del dominio de Tracking.
+
+  - Las integraciones externas deben encapsularse mediante interfaces.
+
+  - No exponer detalles internos de un servicio a otro.
+
+  - Mantener separación de responsabilidades.
+
+  - Evitar lógica de negocio en Controllers.
+
+  - Toda regla de negocio debe implementarse mediante Actions o Casos de Uso.
+
+  - Los contratos REST son considerados públicos y deben mantenerse estables.    
+
+constraints:
+
+  - No generar comunicación directa entre Frontend y Tracking Simulator.
+
+  - No duplicar lógica entre Backend y Tracking Simulator.
+
+  - Mantener la independencia de cada servicio. 
