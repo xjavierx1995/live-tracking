@@ -70,7 +70,7 @@
 
   ```
   
-  El *backend* tendra la estrucutura base que brinda laravel (Laravel 12, Sanctum, MySQL) y se encargara de la comunicacion entre el microservicio y el frontend.:
+  El *backend* tendra la estrucutura base que brinda laravel (Laravel 13, Sanctum, MySQL) y se encargara de la comunicacion entre el microservicio y el frontend.:
 
   se utilizara GoogleMapsRouteProvider para generar la polylines.
 
