@@ -52,7 +52,8 @@
           type="submit"
           no-caps
           unelevated
-          class="auth-submit"
+          color="primary"
+          class="auth-submit "
           :loading="authStore.loading"
         >
           Iniciar sesion
@@ -94,7 +95,7 @@ async function handleLogin() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss"> 
 .auth-card {
   display: flex;
   flex-direction: column;
@@ -187,7 +188,6 @@ async function handleLogin() {
   width: 100%;
   height: 44px !important;
   min-height: 44px;
-  background: var(--color-primary) !important;
   color: white !important;
   border-radius: 10px !important;
   font-size: 14px;

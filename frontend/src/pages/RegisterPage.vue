@@ -89,6 +89,7 @@
           type="submit"
           no-caps
           unelevated
+          color="primary"
           class="auth-submit"
           :loading="authStore.loading"
         >
@@ -241,7 +242,6 @@ async function handleRegister() {
   width: 100%;
   height: 44px !important;
   min-height: 44px;
-  background: var(--color-primary) !important;
   color: white !important;
   border-radius: 10px !important;
   font-size: 14px;
